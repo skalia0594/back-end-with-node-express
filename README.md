@@ -1,1 +1,1 @@
-This is project to creaate API call with node and express.
+This is project to create, API call with node and express.
