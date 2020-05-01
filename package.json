@@ -1,0 +1,35 @@
+{
+  "name": "backendwithnodeandexpress",
+  "version": "1.0.0",
+  "description": "Rest Api Calls",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/skalia0594/back-end-with-node-express.git"
+  },
+  "keywords": [
+    "api",
+    "call",
+    "node",
+    "express"
+  ],
+  "author": "Shubham Kalia",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/skalia0594/back-end-with-node-express/issues"
+  },
+  "homepage": "https://github.com/skalia0594/back-end-with-node-express#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "node-fetch": "^2.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.3"
+  }
+}
