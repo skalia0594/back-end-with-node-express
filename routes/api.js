@@ -2,8 +2,6 @@ const express = require('express');
 const fetch = require('node-fetch');
 const router = express.Router();
 module.exports = router
-// const {getData, sortData} = require('../helper');
-// const sortData = require('../helper');
 
 const fetchData = async (tag) => {
    try{
@@ -12,7 +10,6 @@ const fetchData = async (tag) => {
         });
         const result = await response.json();
         if(result.error) return []; 
-        // console.log(result);
         return result.posts;
 
    }catch(err){
@@ -35,24 +32,25 @@ router.get('/ping', async (req,res) => {
 //posts api
 router.get('/posts', async (req,res) => {
     try {
-        let alldata =[];
-        // console.log(req.query);
         if(req.query.tags){
-            alldata = await getData(req,alldata);
-            if(req.query.sortBy || req.query.sortBy ===''){
-                if(!(req.query.sortBy === '' || req.query.sortBy === 'id' || req.query.sortBy === 'likes'|| 
-                    req.query.sortBy === 'reads' || req.query.sortBy === 'popularity')){
+            const allData = await getData(req);
+            const sortBy = (typeof req.query.sortBy !== "undefined") ? req.query.sortBy : false;
+            const sortByTypes = ["", "id", "likes", "reads", "popularity"];
+            const direction = (typeof req.query.direction !== "undefined") ? req.query.direction : false;
+            const directionTypes = ["desc", "asc"];
+            
+            if(sortBy){
+                if(!(sortByTypes.includes(sortBy))){
                         res.status(400).json({error: 'sortBy parameter is invalid'});
                         return;
                 }
-                else if(req.query.direction && !(req.query.direction==='desc' || req.query.direction === 'asc')) {
+                else if(!direction && !(directionTypes.includes(direction))) {
                     res.status(400).json({error: 'sortBy parameter is invalid'});
                     return;
                 }
-                await sortData(req, alldata);    
+                await sortData(sortBy,direction, allData);    
             } 
-            // console.log(alldata.length);
-            res.status(200).json({posts:alldata});
+            res.status(200).json({posts:allData});
         }else{
             res.status(400).json({error: 'Tags parameter is required'});
         }
@@ -62,42 +60,48 @@ router.get('/posts', async (req,res) => {
     }
 });
 
-const getData = async (req, alldata) => {
+const getData = async (req, data =[]) => {
+    const output= [];
     const tags = await req.query.tags.split(',');
     for(let i = 0;i<tags.length;i++){
         const tagData = await fetchData(tags[i]);
-        for(let j=0 ; j<tagData.length;j++){
-            await alldata.push(tagData[j]);
-        } 
+        data = [...data, ...tagData];
     }
-    Object.values(alldata.reduce((acc,cur)=>Object.assign(acc,{[cur.id]:cur}),{}));  //remove duplicates
-    return alldata;        
+    //remove Duplicates
+    let temp = {};
+    for(let i=0 ; i< data.length; i++) {
+        const key = data[i]['id'];  // supposing id prop to be unique
+        if(!temp[key]) {
+            temp[key] = true;
+            output.push(data[i]);
+        }
+    }
+    return output;        
 }
 
-const sortData = async (req, alldata) => {
+const sortData = async (sortBy, direction, allData) => {
 
-    if(req.query.sortBy === '' || req.query.sortBy === 'id'){
-        console.log('entered:', req.query.direction);
-       await alldata.sort((obj1,obj2) => {
-            if(req.query.direction && req.query.direction === 'desc') return obj2.id - obj1.id;
+    if(sortBy === '' || sortBy === 'id'){
+       await allData.sort((obj1,obj2) => {
+            if(direction === 'desc') return obj2.id - obj1.id;
             return obj1.id - obj2.id;
         });
     }
-    else if(req.query.sortBy === 'reads') {
-        await alldata.sort((obj1,obj2) => {
-            if(req.query.direction && req.query.direction === 'desc') return obj2.reads - obj1.reads;
+    else if(sortBy === 'reads') {
+        await allData.sort((obj1,obj2) => {
+            if(direction === 'desc') return obj2.reads - obj1.reads;
             return obj1.reads - obj2.reads;
         });
     }
-    else if(req.query.sortBy === 'likes' ) {
-        await alldata.sort((obj1,obj2) => {
-            if(req.query.direction && req.query.direction === 'desc') return obj2.likes - obj1.likes;
+    else if(sortBy === 'likes' ) {
+        await allData.sort((obj1,obj2) => {
+            if(direction === 'desc') return obj2.likes - obj1.likes;
             return obj1.likes - obj2.likes;
         });
     }
-    else if(req.query.sortBy === 'popularity') {
-        await alldata.sort((obj1,obj2) => {
-            if(req.query.direction && req.query.direction === 'desc') return obj2.popularity - obj1.popularity;
+    else if(sortBy === 'popularity') {
+        await allData.sort((obj1,obj2) => {
+            if(direction === 'desc') return obj2.popularity - obj1.popularity;
             return obj1.popularity - obj2.popularity;
         });
     }        
